@@ -86,7 +86,7 @@ app.use(async (ctx) => {
                   field === "RESPONSIBLE_ID"
                     ? "Web-request was assigned to you"
                     : "You've been assigned as participant of web-request task"
-                }[/B] https://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${
+                }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${
                   payload["data[FIELDS_BEFORE][ID]"]
                 }/`,
                 DIALOG_ID: to,
