@@ -57,8 +57,11 @@ app.use(async (ctx) => {
         const {
           value: { to },
           createdDate,
+          field,
         } = taskHistory
-          .filter((historyPoint) => historyPoint.field === "RESPONSIBLE_ID")
+          .filter(({ field }) =>
+            ["RESPONSIBLE_ID", "ACCOMPLICES"].includes(field)
+          )
           .pop() as HistoryPoint;
         const dateOfLastChange = parse(
           createdDate + " +03",
@@ -79,10 +82,12 @@ app.use(async (ctx) => {
             {
               method: "POST",
               body: JSON.stringify({
-                MESSAGE: "[B]Web-request was assigned to you[/B]\n" +
-                  `https://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${
-                    payload["data[FIELDS_BEFORE][ID]"]
-                  }/`,
+                MESSAGE: field === "RESPONSIBLE_ID"
+                  ? "[B]Web-request was assigned to you[/B]\n"
+                  : "[B]You've been assigned as participant of web-request task[/B]" +
+                    `https://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${
+                      payload["data[FIELDS_BEFORE][ID]"]
+                    }/`,
                 DIALOG_ID: to,
               }),
               headers: {
