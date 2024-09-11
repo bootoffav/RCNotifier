@@ -20,7 +20,7 @@ app.use(async (ctx) => {
   try {
     // const { type, value } = ctx.request.type();
     if (body.type() === "form") {
-      console.log(body.text());
+      console.log(await body.text());
       return;
       const payload = Object.fromEntries(await value) as WebhookPayload;
       if (
