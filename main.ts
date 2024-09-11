@@ -15,14 +15,10 @@ type HistoryPoint = {
   };
 };
 
-app.use(async (ctx) => {
-  const { body } = ctx.request;
+app.use(async ({ request: { body } }) => {
   try {
-    // const { type, value } = ctx.request.type();
     if (body.type() === "form") {
-      console.log(await body.form());
-      return;
-      // const payload = Object.fromEntries(await body.text()) as WebhookPayload;
+      const payload = Object.fromEntries(await body.form()) as WebhookPayload;
       if (
         payload["auth[application_token]"] ===
           Deno.env.get("APPLICATION_TOKEN") &&
@@ -107,4 +103,4 @@ app.use(async (ctx) => {
   }
 });
 
-await app.listen({ port: 80 });
+await app.listen({ port: 8001 });

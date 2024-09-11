@@ -15,6 +15,7 @@
       "jsr:@std/io@0.224": "jsr:@std/io@0.224.7",
       "jsr:@std/media-types@^1.0": "jsr:@std/media-types@1.0.3",
       "jsr:@std/path@^1.0": "jsr:@std/path@1.0.4",
+      "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:date-fns": "npm:date-fns@3.6.0",
       "npm:path-to-regexp@6.2.1": "npm:path-to-regexp@6.2.1"
     },
@@ -79,6 +80,10 @@
       }
     },
     "npm": {
+      "@types/node@18.16.19": {
+        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
+        "dependencies": {}
+      },
       "date-fns@3.6.0": {
         "integrity": "sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==",
         "dependencies": {}
