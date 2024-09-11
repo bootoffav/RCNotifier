@@ -20,9 +20,9 @@ app.use(async (ctx) => {
   try {
     // const { type, value } = ctx.request.type();
     if (body.type() === "form") {
-      console.log(await body.text());
+      console.log(await body.form());
       return;
-      const payload = Object.fromEntries(await value) as WebhookPayload;
+      // const payload = Object.fromEntries(await body.text()) as WebhookPayload;
       if (
         payload["auth[application_token]"] ===
           Deno.env.get("APPLICATION_TOKEN") &&
