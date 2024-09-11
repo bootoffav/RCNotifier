@@ -8,7 +8,6 @@
       "jsr:@std/bytes@^1.0": "jsr:@std/bytes@1.0.2",
       "jsr:@std/bytes@^1.0.2": "jsr:@std/bytes@1.0.2",
       "jsr:@std/crypto@^1.0": "jsr:@std/crypto@1.0.3",
-      "jsr:@std/dotenv@^0.225.2": "jsr:@std/dotenv@0.225.2",
       "jsr:@std/encoding@^1.0": "jsr:@std/encoding@1.0.4",
       "jsr:@std/encoding@^1.0.4": "jsr:@std/encoding@1.0.4",
       "jsr:@std/http@^1.0": "jsr:@std/http@1.0.5",
@@ -54,9 +53,6 @@
       "@std/crypto@1.0.3": {
         "integrity": "a2a32f51ddef632d299e3879cd027c630dcd4d1d9a5285d6e6788072f4e51e7f"
       },
-      "@std/dotenv@0.225.2": {
-        "integrity": "e2025dce4de6c7bca21dece8baddd4262b09d5187217e231b033e088e0c4dd23"
-      },
       "@std/encoding@1.0.4": {
         "integrity": "2266cd516b32369e3dc5695717c96bf88343a1f761d6e6187a02a2bbe2af86ae"
       },
@@ -98,7 +94,6 @@
   "workspace": {
     "dependencies": [
       "jsr:@oak/oak@^17.0.0",
-      "jsr:@std/dotenv@^0.225.2",
       "npm:date-fns"
     ]
   }

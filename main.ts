@@ -1,9 +1,7 @@
 import { Application } from "@oak/oak";
-import { loadSync } from "@std/dotenv";
 import { compareAsc, parse, sub } from "date-fns";
 import { WebhookPayload } from "./types.ts";
 
-loadSync({ export: true });
 const app = new Application();
 
 type HistoryPoint = {
