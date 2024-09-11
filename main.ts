@@ -1,6 +1,6 @@
-import { Application } from "https://deno.land/x/oak@v12.6.1/mod.ts";
-import { loadSync } from "https://deno.land/std@0.220.1/dotenv/mod.ts";
-import { compareAsc, parse, sub } from "npm:date-fns";
+import { Application } from "@oak/oak";
+import { loadSync } from "@std/dotenv";
+import { compareAsc, parse, sub } from "date-fns";
 import { WebhookPayload } from "./types.ts";
 
 loadSync({ export: true });
@@ -16,9 +16,12 @@ type HistoryPoint = {
 };
 
 app.use(async (ctx) => {
+  const { body } = ctx.request;
   try {
-    const { type, value } = ctx.request.body();
-    if (type === "form") {
+    // const { type, value } = ctx.request.type();
+    if (body.type() === "form") {
+      console.log(body.text());
+      return;
       const payload = Object.fromEntries(await value) as WebhookPayload;
       if (
         payload["auth[application_token]"] ===
