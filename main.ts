@@ -13,6 +13,8 @@ type HistoryPoint = {
   };
 };
 
+let clientEndpoint: string;
+
 app.use(async ({ request: { body } }) => {
   try {
     if (body.type() === "form") {
@@ -22,7 +24,7 @@ app.use(async ({ request: { body } }) => {
           Deno.env.get("APPLICATION_TOKEN") &&
         payload.event === "ONTASKUPDATE"
       ) {
-        const clientEndpoint = payload["auth[client_endpoint]"];
+        clientEndpoint = payload["auth[client_endpoint]"];
 
         // check if task is created by web_request
         const taskBelongsToWR = await fetch(
@@ -70,28 +72,15 @@ app.use(async ({ request: { body } }) => {
         // check if responsible change happened within last 5 seconds,
         if (compareAsc(dateOfLastChange, tresholdDate) !== -1) {
           // send notification to chat
-          fetch(
-            `${clientEndpoint}189/${
-              Deno.env.get(
-                "WEBHOOK_KEY",
-              )
-            }/im.message.add`,
-            {
-              method: "POST",
-              body: JSON.stringify({
-                MESSAGE: `[B]${
-                  field === "RESPONSIBLE_ID"
-                    ? "Web-request was assigned to you"
-                    : "You've been assigned as participant of web-request task"
-                }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${
-                  payload["data[FIELDS_BEFORE][ID]"]
-                }/`,
-                DIALOG_ID: to,
-              }),
-              headers: {
-                "content-type": "application/json",
-              },
-            },
+          sendToChat(
+            field,
+            payload["data[FIELDS_BEFORE][ID]"],
+            to,
+          );
+          // send notificaton by email
+          sendToEmail(
+            payload["data[FIELDS_BEFORE][ID]"],
+            await getUserEmail(to),
           );
         }
       }
@@ -100,5 +89,69 @@ app.use(async ({ request: { body } }) => {
     console.log(e);
   }
 });
+
+function sendToChat(
+  field: string,
+  taskId: string,
+  userId: string,
+) {
+  fetch(
+    `${clientEndpoint}189/${
+      Deno.env.get(
+        "WEBHOOK_KEY",
+      )
+    }/im.message.add`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        MESSAGE: `[B]${
+          field === "RESPONSIBLE_ID"
+            ? "Web-request was assigned to you"
+            : "You've been assigned as participant of web-request task"
+        }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${taskId}/`,
+        DIALOG_ID: userId,
+      }),
+      headers: {
+        "content-type": "application/json",
+      },
+    },
+  );
+}
+
+function sendToEmail(taskId: string, email: string) {
+  fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    body: JSON.stringify({
+      "sender": {
+        "name": "WR Report (XMT)",
+        "email": "web_request@xmtextiles.com",
+      },
+      "to": [
+        {
+          email,
+        },
+      ],
+      "subject": "Web-request was assigned to you",
+      "htmlContent": `<html><head></head><body><p>
+        https://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${taskId}
+        </p></body></html>`,
+    }),
+    headers: {
+      "content-type": "application/json",
+      "api-key": Deno.env.get("BREVO_API_KEY") || "",
+    },
+  });
+}
+
+async function getUserEmail(id: string) {
+  return await fetch(
+    `${clientEndpoint}189/${
+      Deno.env.get(
+        "WEBHOOK_KEY",
+      )
+    }/user.get?id=${id}`,
+  ).then((res) => res.json())
+    .then(({ result }) => result[0]["EMAIL"]);
+}
 
 await app.listen({ port: 80 });
