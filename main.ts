@@ -113,7 +113,7 @@ function sendToEmail(
       },
       "to": [{ email, name: `${name} ${lastName}` }],
       "cc": [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
-      "subject": "Web-request was assigned to you",
+      "subject": `Web-request was assigned to you (${name} ${lastName})`,
       "htmlContent":
         `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/${WEBREQUEST_USER_ID}/tasks/task/view/${taskId}/">${title}</a></body></html>`,
     }),
