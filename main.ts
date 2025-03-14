@@ -66,9 +66,9 @@ app.use(async ({ request: { body } }) => {
           to !== WEBREQUEST_USER_ID
         ) {
           // send notification to chat
-          // send notificaton by email
           sendToChat(field, to);
-          sendToEmail(title, await getUserEmail(to));
+          // send notificaton by email
+          sendToEmail(title, await getUser(to));
         }
       }
     }
@@ -102,7 +102,7 @@ function sendToChat(
 
 function sendToEmail(
   title: string,
-  email: string,
+  { name, lastName, email }: Awaited<ReturnType<typeof getUser>>,
 ) {
   fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -111,7 +111,7 @@ function sendToEmail(
         "name": "WR Report (XMT)",
         "email": "web_request@xmtextiles.com",
       },
-      "to": [{ email }],
+      "to": [{ email, name: `${name} ${lastName}` }],
       "cc": [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
       "subject": "Web-request was assigned to you",
       "htmlContent":
@@ -124,11 +124,15 @@ function sendToEmail(
   });
 }
 
-async function getUserEmail(id: string) {
+async function getUser(id: string) {
   return await fetch(
     `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/user.get?id=${id}`,
   ).then((res) => res.json())
-    .then(({ result }) => result[0]["EMAIL"]);
+    .then(({ result }) => ({
+      email: result[0]["EMAIL"],
+      name: result[0]["NAME"],
+      lastName: result[0]["LAST_NAME"],
+    }));
 }
 
 await app.listen({ port: 80 });
