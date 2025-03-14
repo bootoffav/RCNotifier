@@ -5,6 +5,15 @@ export interface Lead extends IncomingEntity {
   SOURCE_ID: "WEBFORM" | string;
 }
 
+export type HistoryPoint = {
+  field: string;
+  createdDate: string;
+  value: {
+    to: string;
+    from: string;
+  };
+};
+
 export interface Activity extends IncomingEntity {
   OWNER_ID: `${number}`;
   OWNER_TYPE_ID: `${number}`;

@@ -1,17 +1,12 @@
 import { Application } from "@oak/oak";
 import { compareAsc, parse, sub } from "date-fns";
-import { WebhookPayload } from "./types.ts";
+import type { HistoryPoint, WebhookPayload } from "./types.ts";
 
 const app = new Application();
 
-type HistoryPoint = {
-  field: string;
-  createdDate: string;
-  value: {
-    to: string;
-    from: string;
-  };
-};
+const WEBHOOK_KEY = Deno.env.get("WEBHOOK_KEY") || "";
+const WEBREQUEST_USER_ID = Deno.env.get("WEBREQUEST_USER_ID") || "189";
+const APPLICATION_TOKEN = Deno.env.get("APPLICATION_TOKEN") || "";
 
 let clientEndpoint: string;
 let taskId: string;
@@ -21,19 +16,14 @@ app.use(async ({ request: { body } }) => {
     if (body.type() === "form") {
       const payload = Object.fromEntries(await body.form()) as WebhookPayload;
       if (
-        payload["auth[application_token]"] ===
-          Deno.env.get("APPLICATION_TOKEN") &&
+        payload["auth[application_token]"] === APPLICATION_TOKEN &&
         payload.event === "ONTASKUPDATE"
       ) {
         clientEndpoint = payload["auth[client_endpoint]"];
         taskId = payload["data[FIELDS_BEFORE][ID]"];
 
         const { createdBy, title } = await fetch(
-          `${clientEndpoint}189/${
-            Deno.env.get(
-              "WEBHOOK_KEY",
-            )
-          }/tasks.task.get?id=${taskId}`,
+          `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/tasks.task.get?id=${taskId}`,
         )
           .then((res) => res.json())
           .then(({ result }) => ({
@@ -42,15 +32,11 @@ app.use(async ({ request: { body } }) => {
           }));
 
         // check if task is created by web_request
-        if (createdBy !== "189") return;
+        if (createdBy !== WEBREQUEST_USER_ID) return;
 
         // get task history
         const taskHistory = await fetch(
-          `${clientEndpoint}189/${
-            Deno.env.get(
-              "WEBHOOK_KEY",
-            )
-          }/tasks.task.history.list?id=${taskId}`,
+          `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/tasks.task.history.list?id=${taskId}`,
         )
           .then((res) => res.json())
           .then(({ result, error }) =>
@@ -75,10 +61,13 @@ app.use(async ({ request: { body } }) => {
         const tresholdDate = sub(new Date(), { seconds: 5 });
 
         // check if responsible change happened within last 5 seconds,
-        if (compareAsc(dateOfLastChange, tresholdDate) !== -1) {
+        if (
+          compareAsc(dateOfLastChange, tresholdDate) !== -1 &&
+          to !== WEBREQUEST_USER_ID
+        ) {
           // send notification to chat
-          sendToChat(field, to);
           // send notificaton by email
+          sendToChat(field, to);
           sendToEmail(title, await getUserEmail(to));
         }
       }
@@ -93,11 +82,7 @@ function sendToChat(
   userId: string,
 ) {
   fetch(
-    `${clientEndpoint}189/${
-      Deno.env.get(
-        "WEBHOOK_KEY",
-      )
-    }/im.message.add`,
+    `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/im.message.add`,
     {
       method: "POST",
       body: JSON.stringify({
@@ -105,7 +90,7 @@ function sendToChat(
           field === "RESPONSIBLE_ID"
             ? "Web-request was assigned to you"
             : "You've been assigned as participant of web-request task"
-        }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${taskId}/`,
+        }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/${WEBREQUEST_USER_ID}/tasks/task/view/${taskId}/`,
         DIALOG_ID: userId,
       }),
       headers: {
@@ -130,7 +115,7 @@ function sendToEmail(
       "cc": [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
       "subject": "Web-request was assigned to you",
       "htmlContent":
-        `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${taskId}/">${title}</a></body></html>`,
+        `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/${WEBREQUEST_USER_ID}/tasks/task/view/${taskId}/">${title}</a></body></html>`,
     }),
     headers: {
       "content-type": "application/json",
@@ -141,11 +126,7 @@ function sendToEmail(
 
 async function getUserEmail(id: string) {
   return await fetch(
-    `${clientEndpoint}189/${
-      Deno.env.get(
-        "WEBHOOK_KEY",
-      )
-    }/user.get?id=${id}`,
+    `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/user.get?id=${id}`,
   ).then((res) => res.json())
     .then(({ result }) => result[0]["EMAIL"]);
 }
