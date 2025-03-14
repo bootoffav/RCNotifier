@@ -14,6 +14,7 @@ type HistoryPoint = {
 };
 
 let clientEndpoint: string;
+let taskId: string;
 
 app.use(async ({ request: { body } }) => {
   try {
@@ -25,19 +26,23 @@ app.use(async ({ request: { body } }) => {
         payload.event === "ONTASKUPDATE"
       ) {
         clientEndpoint = payload["auth[client_endpoint]"];
+        taskId = payload["data[FIELDS_BEFORE][ID]"];
 
-        // check if task is created by web_request
-        const taskBelongsToWR = await fetch(
+        const { createdBy, title } = await fetch(
           `${clientEndpoint}189/${
             Deno.env.get(
               "WEBHOOK_KEY",
             )
-          }/tasks.task.get?id=${payload["data[FIELDS_BEFORE][ID]"]}`,
+          }/tasks.task.get?id=${taskId}`,
         )
           .then((res) => res.json())
-          .then(({ result }) => result.task.createdBy === "189");
+          .then(({ result }) => ({
+            createdBy: result.task.createdBy,
+            title: result.task.title,
+          }));
 
-        if (!taskBelongsToWR) return;
+        // check if task is created by web_request
+        if (createdBy !== "189") return;
 
         // get task history
         const taskHistory = await fetch(
@@ -45,7 +50,7 @@ app.use(async ({ request: { body } }) => {
             Deno.env.get(
               "WEBHOOK_KEY",
             )
-          }/tasks.task.history.list?id=${payload["data[FIELDS_BEFORE][ID]"]}`,
+          }/tasks.task.history.list?id=${taskId}`,
         )
           .then((res) => res.json())
           .then(({ result, error }) =>
@@ -72,16 +77,9 @@ app.use(async ({ request: { body } }) => {
         // check if responsible change happened within last 5 seconds,
         if (compareAsc(dateOfLastChange, tresholdDate) !== -1) {
           // send notification to chat
-          sendToChat(
-            field,
-            payload["data[FIELDS_BEFORE][ID]"],
-            to,
-          );
+          sendToChat(field, to);
           // send notificaton by email
-          sendToEmail(
-            payload["data[FIELDS_BEFORE][ID]"],
-            await getUserEmail(to),
-          );
+          sendToEmail(title, await getUserEmail(to));
         }
       }
     }
@@ -92,7 +90,6 @@ app.use(async ({ request: { body } }) => {
 
 function sendToChat(
   field: string,
-  taskId: string,
   userId: string,
 ) {
   fetch(
@@ -118,7 +115,10 @@ function sendToChat(
   );
 }
 
-function sendToEmail(taskId: string, email: string) {
+function sendToEmail(
+  title: string,
+  email: string,
+) {
   fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     body: JSON.stringify({
@@ -126,15 +126,10 @@ function sendToEmail(taskId: string, email: string) {
         "name": "WR Report (XMT)",
         "email": "web_request@xmtextiles.com",
       },
-      "to": [
-        {
-          email,
-        },
-      ],
+      "to": [{ email }],
       "subject": "Web-request was assigned to you",
-      "htmlContent": `<html><head></head><body><p>
-        https://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${taskId}
-        </p></body></html>`,
+      "htmlContent":
+        `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/189/tasks/task/view/${taskId}/">${title}</a></body></html>`,
     }),
     headers: {
       "content-type": "application/json",
