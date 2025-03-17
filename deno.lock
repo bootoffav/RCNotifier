@@ -3,13 +3,17 @@
   "specifiers": {
     "jsr:@oak/commons@1": "1.0.0",
     "jsr:@oak/oak@17": "17.0.0",
+    "jsr:@std/assert@*": "1.0.11",
     "jsr:@std/assert@1": "1.0.4",
+    "jsr:@std/assert@^1.0.11": "1.0.11",
     "jsr:@std/bytes@1": "1.0.2",
     "jsr:@std/bytes@^1.0.2": "1.0.2",
     "jsr:@std/crypto@1": "1.0.3",
     "jsr:@std/encoding@1": "1.0.4",
     "jsr:@std/encoding@^1.0.4": "1.0.4",
+    "jsr:@std/expect@*": "1.0.13",
     "jsr:@std/http@1": "1.0.5",
+    "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/io@0.224": "0.224.7",
     "jsr:@std/media-types@1": "1.0.3",
     "jsr:@std/path@1": "1.0.4",
@@ -21,7 +25,7 @@
     "@oak/commons@1.0.0": {
       "integrity": "49805b55603c3627a9d6235c0655aa2b6222d3036b3a13ff0380c16368f607ac",
       "dependencies": [
-        "jsr:@std/assert",
+        "jsr:@std/assert@1",
         "jsr:@std/bytes@1",
         "jsr:@std/crypto",
         "jsr:@std/encoding@1",
@@ -33,7 +37,7 @@
       "integrity": "1be33e585080d8ce5093963469a05ed265f1d5f139421c9b0fda8419a533ebee",
       "dependencies": [
         "jsr:@oak/commons",
-        "jsr:@std/assert",
+        "jsr:@std/assert@1",
         "jsr:@std/bytes@1",
         "jsr:@std/crypto",
         "jsr:@std/http",
@@ -46,6 +50,12 @@
     "@std/assert@1.0.4": {
       "integrity": "d4c767ea578e5bc09c15b6e503376003e5b2d1f4c0cdf08524a92101ff4d7b96"
     },
+    "@std/assert@1.0.11": {
+      "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
     "@std/bytes@1.0.2": {
       "integrity": "fbdee322bbd8c599a6af186a1603b3355e59a5fb1baa139f8f4c3c9a1b3e3d57"
     },
@@ -55,11 +65,21 @@
     "@std/encoding@1.0.4": {
       "integrity": "2266cd516b32369e3dc5695717c96bf88343a1f761d6e6187a02a2bbe2af86ae"
     },
+    "@std/expect@1.0.13": {
+      "integrity": "d8e236c7089cd9fcf5e6032f27dadc3db6349d0aee48c15bc71d717bca5baa42",
+      "dependencies": [
+        "jsr:@std/assert@^1.0.11",
+        "jsr:@std/internal"
+      ]
+    },
     "@std/http@1.0.5": {
       "integrity": "afa1cf4f0c19e224534df3288a84de4fdfffe8a26308dfe3794166e4fafe0f3d",
       "dependencies": [
         "jsr:@std/encoding@^1.0.4"
       ]
+    },
+    "@std/internal@1.0.5": {
+      "integrity": "54a546004f769c1ac9e025abd15a76b6671ddc9687e2313b67376125650dc7ba"
     },
     "@std/io@0.224.7": {
       "integrity": "a70848793c44a7c100926571a8c9be68ba85487bfcd4d0540d86deabe1123dc9",

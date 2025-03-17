@@ -68,7 +68,8 @@ app.use(async ({ request: { body } }) => {
           // send notification to chat
           sendToChat(field, to);
           // send notificaton by email
-          sendToEmail(title, await getUser(to));
+          !user_optedout_from_email_notification(to) &&
+            sendToEmail(title, await getUser(to));
         }
       }
     }
@@ -76,6 +77,11 @@ app.use(async ({ request: { body } }) => {
     console.log(e);
   }
 });
+
+function user_optedout_from_email_notification(id: string) {
+  const OPTEDOUT_USER_IDS = ["1606"];
+  return (OPTEDOUT_USER_IDS.includes(id));
+}
 
 function sendToChat(
   field: string,
@@ -135,4 +141,8 @@ async function getUser(id: string) {
     }));
 }
 
-await app.listen({ port: 80 });
+if (import.meta.main) {
+  app.listen({ port: 8000 });
+}
+
+export { user_optedout_from_email_notification };
