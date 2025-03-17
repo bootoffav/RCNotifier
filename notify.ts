@@ -14,7 +14,7 @@ function sendToChat(
           field === "RESPONSIBLE_ID"
             ? "Web-request was assigned to you"
             : "You've been assigned as participant of web-request task"
-        }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/${CONFIG.WEBREQUEST_USER_ID}/tasks/task/view/${taskId}/`,
+        }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/${CONFIG.WEBREQUEST_USER_ID}/tasks/task/view/${CONFIG.TASK_ID}/`,
         DIALOG_ID: userId,
       }),
       headers: {
@@ -39,7 +39,7 @@ function sendToEmail(
       "cc": [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
       "subject": `Web-request was assigned to you (${name} ${lastName})`,
       "htmlContent":
-        `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/${WEBREQUEST_USER_ID}/tasks/task/view/${taskId}/">${title}</a></body></html>`,
+        `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/${WEBREQUEST_USER_ID}/tasks/task/view/${CONFIG.TASK_ID}/">${title}</a></body></html>`,
     }),
     headers: {
       "content-type": "application/json",

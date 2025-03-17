@@ -11,9 +11,8 @@ const CONFIG = {
   WEBREQUEST_USER_ID: Deno.env.get("WEBREQUEST_USER_ID") || "189",
   APPLICATION_TOKEN: Deno.env.get("APPLICATION_TOKEN") || "",
   CLIENT_ENDPOINT: "",
+  TASK_ID: "",
 };
-
-let taskId: string;
 
 app.use(async ({ request: { body } }) => {
   try {
@@ -24,10 +23,10 @@ app.use(async ({ request: { body } }) => {
         payload.event === "ONTASKUPDATE"
       ) {
         CONFIG.CLIENT_ENDPOINT = payload["auth[client_endpoint]"];
-        taskId = payload["data[FIELDS_BEFORE][ID]"];
+        CONFIG.TASK_ID = payload["data[FIELDS_BEFORE][ID]"];
 
         const { createdBy, title } = await fetch(
-          `${CONFIG.CLIENT_ENDPOINT}${CONFIG.WEBREQUEST_USER_ID}/${CONFIG.WEBHOOK_KEY}/tasks.task.get?id=${taskId}`,
+          `${CONFIG.CLIENT_ENDPOINT}${CONFIG.WEBREQUEST_USER_ID}/${CONFIG.WEBHOOK_KEY}/tasks.task.get?id=${CONFIG.TASK_ID}`,
         )
           .then((res) => res.json())
           .then(({ result }) => ({
@@ -40,7 +39,7 @@ app.use(async ({ request: { body } }) => {
 
         // get task history
         const taskHistory = await fetch(
-          `${CONFIG.CLIENT_ENDPOINT}${CONFIG.WEBREQUEST_USER_ID}/${CONFIG.WEBHOOK_KEY}/tasks.task.history.list?id=${taskId}`,
+          `${CONFIG.CLIENT_ENDPOINT}${CONFIG.WEBREQUEST_USER_ID}/${CONFIG.WEBHOOK_KEY}/tasks.task.history.list?id=${CONFIG.TASK_ID}`,
         )
           .then((res) => res.json())
           .then(({ result, error }) =>
