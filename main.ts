@@ -1,14 +1,18 @@
 import { Application } from "@oak/oak";
 import { compareAsc, parse, sub } from "date-fns";
 import type { HistoryPoint, WebhookPayload } from "./types.ts";
+import { sendToChat, sendToEmail } from "./notify.ts";
+import { getUser } from "./utils.ts";
 
 const app = new Application();
 
-const WEBHOOK_KEY = Deno.env.get("WEBHOOK_KEY") || "";
-const WEBREQUEST_USER_ID = Deno.env.get("WEBREQUEST_USER_ID") || "189";
-const APPLICATION_TOKEN = Deno.env.get("APPLICATION_TOKEN") || "";
+const CONFIG = {
+  WEBHOOK_KEY: Deno.env.get("WEBHOOK_KEY") || "",
+  WEBREQUEST_USER_ID: Deno.env.get("WEBREQUEST_USER_ID") || "189",
+  APPLICATION_TOKEN: Deno.env.get("APPLICATION_TOKEN") || "",
+  CLIENT_ENDPOINT: "",
+};
 
-let clientEndpoint: string;
 let taskId: string;
 
 app.use(async ({ request: { body } }) => {
@@ -16,14 +20,14 @@ app.use(async ({ request: { body } }) => {
     if (body.type() === "form") {
       const payload = Object.fromEntries(await body.form()) as WebhookPayload;
       if (
-        payload["auth[application_token]"] === APPLICATION_TOKEN &&
+        payload["auth[application_token]"] === CONFIG.APPLICATION_TOKEN &&
         payload.event === "ONTASKUPDATE"
       ) {
-        clientEndpoint = payload["auth[client_endpoint]"];
+        CONFIG.CLIENT_ENDPOINT = payload["auth[client_endpoint]"];
         taskId = payload["data[FIELDS_BEFORE][ID]"];
 
         const { createdBy, title } = await fetch(
-          `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/tasks.task.get?id=${taskId}`,
+          `${CONFIG.CLIENT_ENDPOINT}${CONFIG.WEBREQUEST_USER_ID}/${CONFIG.WEBHOOK_KEY}/tasks.task.get?id=${taskId}`,
         )
           .then((res) => res.json())
           .then(({ result }) => ({
@@ -32,11 +36,11 @@ app.use(async ({ request: { body } }) => {
           }));
 
         // check if task is created by web_request
-        if (createdBy !== WEBREQUEST_USER_ID) return;
+        if (createdBy !== CONFIG.WEBREQUEST_USER_ID) return;
 
         // get task history
         const taskHistory = await fetch(
-          `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/tasks.task.history.list?id=${taskId}`,
+          `${CONFIG.CLIENT_ENDPOINT}${CONFIG.WEBREQUEST_USER_ID}/${CONFIG.WEBHOOK_KEY}/tasks.task.history.list?id=${taskId}`,
         )
           .then((res) => res.json())
           .then(({ result, error }) =>
@@ -63,7 +67,7 @@ app.use(async ({ request: { body } }) => {
         // check if responsible change happened within last 5 seconds,
         if (
           compareAsc(dateOfLastChange, tresholdDate) !== -1 &&
-          to !== WEBREQUEST_USER_ID
+          to !== CONFIG.WEBREQUEST_USER_ID
         ) {
           // send notification to chat
           sendToChat(field, to);
@@ -83,66 +87,8 @@ function user_optedout_from_email_notification(id: string) {
   return (OPTEDOUT_USER_IDS.includes(id));
 }
 
-function sendToChat(
-  field: string,
-  userId: string,
-) {
-  fetch(
-    `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/im.message.add`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        MESSAGE: `[B]${
-          field === "RESPONSIBLE_ID"
-            ? "Web-request was assigned to you"
-            : "You've been assigned as participant of web-request task"
-        }[/B]\nhttps://xmtextiles.bitrix24.eu/company/personal/user/${WEBREQUEST_USER_ID}/tasks/task/view/${taskId}/`,
-        DIALOG_ID: userId,
-      }),
-      headers: {
-        "content-type": "application/json",
-      },
-    },
-  );
-}
-
-function sendToEmail(
-  title: string,
-  { name, lastName, email }: Awaited<ReturnType<typeof getUser>>,
-) {
-  fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    body: JSON.stringify({
-      "sender": {
-        "name": "WR Report (XMT)",
-        "email": "web_request@xmtextiles.com",
-      },
-      "to": [{ email, name: `${name} ${lastName}` }],
-      "cc": [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
-      "subject": `Web-request was assigned to you (${name} ${lastName})`,
-      "htmlContent":
-        `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/${WEBREQUEST_USER_ID}/tasks/task/view/${taskId}/">${title}</a></body></html>`,
-    }),
-    headers: {
-      "content-type": "application/json",
-      "api-key": Deno.env.get("BREVO_API_KEY") || "",
-    },
-  });
-}
-
-async function getUser(id: string) {
-  return await fetch(
-    `${clientEndpoint}${WEBREQUEST_USER_ID}/${WEBHOOK_KEY}/user.get?id=${id}`,
-  ).then((res) => res.json())
-    .then(({ result }) => ({
-      email: result[0]["EMAIL"],
-      name: result[0]["NAME"],
-      lastName: result[0]["LAST_NAME"],
-    }));
-}
-
 if (import.meta.main) {
-  app.listen({ port: 8000 });
+  app.listen({ port: 80 });
 }
 
-export { user_optedout_from_email_notification };
+export { CONFIG, user_optedout_from_email_notification };
