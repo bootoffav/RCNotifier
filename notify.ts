@@ -70,10 +70,10 @@ Deno.cron(
 
     // send mails
     for (const [responsibleId, tasks] of Object.entries(taskByResponsible)) {
+      const { name, email } = await getUser(responsibleId);
       sendToEmail(
         `this week web-requests (${name})`,
         formMessageBody("reminder", tasks),
-        // await getUser(responsibleId)
         { name: "Aleksei Butov", email: "admin@xmtextiles.com" },
       );
     }
