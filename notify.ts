@@ -42,7 +42,7 @@ function sendToEmail(
         email: "web_request@xmtextiles.com",
       },
       to: [{ name, email }],
-      // cc: [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
+      cc: [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
       subject,
       htmlContent,
     }),
@@ -55,8 +55,7 @@ function sendToEmail(
 
 Deno.cron(
   "Send daily email reminders",
-  // "30 13 * * 2-5",
-  "*/3 * * * *",
+  "30 13 * * 2-5",
   async () => {
     // get tasks
     const tasks: Task[] = await getTasks()
@@ -74,7 +73,7 @@ Deno.cron(
       sendToEmail(
         `this week web-requests (${name})`,
         formMessageBody("reminder", tasks),
-        { name: "Aleksei Butov", email: "admin@xmtextiles.com" },
+        { name, email },
       );
     }
   },
