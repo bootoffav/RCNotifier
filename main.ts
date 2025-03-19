@@ -72,10 +72,11 @@ app.use(async ({ request: { body } }) => {
           sendToChat(field, to);
           // send notificaton by email
           if (!user_optedout_from_email_notification(to)) {
+            const { name, email } = await getUser(to);
             sendToEmail(
               `Web-request was assigned to you (${name})`,
               formMessageBody("changer", title),
-              await getUser(to),
+              { name, email },
             );
           }
         }
