@@ -1,5 +1,10 @@
+import { groupBy } from "jsr:@es-toolkit/es-toolkit";
+
+import type { Task } from "./types.ts";
+
+import { formMessageBody, getUser } from "./utils.ts";
 import { CONFIG } from "./main.ts";
-import type { getUser } from "./utils.ts";
+import { getTasks } from "./endpoint.ts";
 
 function sendToChat(
   field: string,
@@ -25,21 +30,21 @@ function sendToChat(
 }
 
 function sendToEmail(
-  title: string,
-  { name, lastName, email }: Awaited<ReturnType<typeof getUser>>,
+  subject: string,
+  htmlContent: string,
+  { name, email }: Awaited<ReturnType<typeof getUser>>,
 ) {
   fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     body: JSON.stringify({
-      "sender": {
-        "name": "WR Report (XMT)",
-        "email": "web_request@xmtextiles.com",
+      sender: {
+        name: "WR Report (XMT)",
+        email: "web_request@xmtextiles.com",
       },
-      "to": [{ email, name: `${name} ${lastName}` }],
-      "cc": [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
-      "subject": `Web-request was assigned to you (${name} ${lastName})`,
-      "htmlContent":
-        `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/${CONFIG.WEBREQUEST_USER_ID}/tasks/task/view/${CONFIG.TASK_ID}/">${title}</a></body></html>`,
+      to: [{ name, email }],
+      // cc: [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
+      subject,
+      htmlContent,
     }),
     headers: {
       "content-type": "application/json",
@@ -47,5 +52,32 @@ function sendToEmail(
     },
   });
 }
+
+Deno.cron(
+  "Send daily email reminders",
+  // "30 13 * * 2-5",
+  "*/3 * * * *",
+  async () => {
+    // get tasks
+    const tasks: Task[] = await getTasks()
+      .then((r) => r.result.tasks)
+      .catch(() => []);
+
+    const taskByResponsible = groupBy(
+      tasks,
+      (task: Task) => task.responsibleId,
+    );
+
+    // send mails
+    for (const [responsibleId, tasks] of Object.entries(taskByResponsible)) {
+      sendToEmail(
+        `this week web-requests (${name})`,
+        formMessageBody("reminder", tasks),
+        // await getUser(responsibleId)
+        { name: "Aleksei Butov", email: "admin@xmtextiles.com" },
+      );
+    }
+  },
+);
 
 export { sendToChat, sendToEmail };

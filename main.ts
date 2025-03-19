@@ -2,7 +2,7 @@ import { Application } from "@oak/oak";
 import { compareAsc, parse, sub } from "date-fns";
 import type { HistoryPoint, WebhookPayload } from "./types.ts";
 import { sendToChat, sendToEmail } from "./notify.ts";
-import { getUser } from "./utils.ts";
+import { formMessageBody, getUser } from "./utils.ts";
 
 const app = new Application();
 
@@ -10,7 +10,7 @@ const CONFIG = {
   WEBHOOK_KEY: Deno.env.get("WEBHOOK_KEY") || "",
   WEBREQUEST_USER_ID: Deno.env.get("WEBREQUEST_USER_ID") || "189",
   APPLICATION_TOKEN: Deno.env.get("APPLICATION_TOKEN") || "",
-  CLIENT_ENDPOINT: "",
+  CLIENT_ENDPOINT: Deno.env.get("CLIENT_ENDPOINT") || "",
   TASK_ID: "",
 };
 
@@ -46,7 +46,7 @@ app.use(async ({ request: { body } }) => {
             error ? [] : (result.list as HistoryPoint[])
           );
 
-        // get history of responsable changes and get last change specific fields
+        // get history of responsible changes and get last change specific fields
         const {
           value: { to },
           createdDate,
@@ -71,8 +71,13 @@ app.use(async ({ request: { body } }) => {
           // send notification to chat
           sendToChat(field, to);
           // send notificaton by email
-          !user_optedout_from_email_notification(to) &&
-            sendToEmail(title, await getUser(to));
+          if (!user_optedout_from_email_notification(to)) {
+            sendToEmail(
+              `Web-request was assigned to you (${name})`,
+              formMessageBody("changer", title),
+              await getUser(to),
+            );
+          }
         }
       }
     }

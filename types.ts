@@ -40,3 +40,13 @@ export interface WebhookPayload {
   event: "ONTASKUPDATE";
   [k: string]: string;
 }
+
+export type Task = {
+  id: string;
+  title: string;
+  responsibleId: string;
+  createdDate: string;
+  responsible: {
+    name: string;
+  };
+};
