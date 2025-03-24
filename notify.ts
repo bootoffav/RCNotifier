@@ -2,7 +2,11 @@ import { groupBy } from "jsr:@es-toolkit/es-toolkit";
 
 import type { Task } from "./types.ts";
 
-import { formMessageBody, getUser } from "./utils.ts";
+import {
+  formMessageBody,
+  getUser,
+  user_optedout_from_email_notification,
+} from "./utils.ts";
 import { CONFIG } from "./main.ts";
 import { getTasks } from "./endpoint.ts";
 
@@ -69,12 +73,14 @@ Deno.cron(
 
     // send mails
     for (const [responsibleId, tasks] of Object.entries(taskByResponsible)) {
-      const { name, email } = await getUser(responsibleId);
-      sendToEmail(
-        `this week web-requests (${name})`,
-        formMessageBody("reminder", tasks),
-        { name, email },
-      );
+      if (!user_optedout_from_email_notification(responsibleId)) {
+        const { name, email } = await getUser(responsibleId);
+        sendToEmail(
+          `this week web-requests (${name})`,
+          formMessageBody("reminder", tasks),
+          { name, email },
+        );
+      }
     }
   },
 );

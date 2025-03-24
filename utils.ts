@@ -11,6 +11,11 @@ function getUser(id: string) {
     }));
 }
 
+function user_optedout_from_email_notification(id: string) {
+  const OPTEDOUT_USER_IDS = ["1606", CONFIG.WEBREQUEST_USER_ID];
+  return (OPTEDOUT_USER_IDS.includes(id));
+}
+
 function formMessageBody(
   formFor: "reminder" | "changer",
   payload: Task[] | string,
@@ -27,4 +32,4 @@ function formMessageBody(
     : `<html><body><a href="https://xmtextiles.bitrix24.eu/company/personal/user/${CONFIG.WEBREQUEST_USER_ID}/tasks/task/view/${CONFIG.TASK_ID}/">${payload}</a></body></html>`;
 }
 
-export { formMessageBody, getUser };
+export { formMessageBody, getUser, user_optedout_from_email_notification };

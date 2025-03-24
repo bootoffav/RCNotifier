@@ -2,7 +2,11 @@ import { Application } from "@oak/oak";
 import { compareAsc, parse, sub } from "date-fns";
 import type { HistoryPoint, WebhookPayload } from "./types.ts";
 import { sendToChat, sendToEmail } from "./notify.ts";
-import { formMessageBody, getUser } from "./utils.ts";
+import {
+  formMessageBody,
+  getUser,
+  user_optedout_from_email_notification,
+} from "./utils.ts";
 
 const app = new Application();
 
@@ -86,11 +90,6 @@ app.use(async ({ request: { body } }) => {
     console.log(e);
   }
 });
-
-function user_optedout_from_email_notification(id: string) {
-  const OPTEDOUT_USER_IDS = ["1606"];
-  return (OPTEDOUT_USER_IDS.includes(id));
-}
 
 if (import.meta.main) {
   app.listen({ port: 80 });
