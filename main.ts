@@ -1,5 +1,5 @@
 import { Application } from "@oak/oak";
-import { compareAsc, parse, sub } from "date-fns";
+import { compareAsc, parseISO, sub } from "date-fns";
 import type { HistoryPoint, WebhookPayload } from "./types.ts";
 import { sendToChat, sendToEmail } from "./notify.ts";
 import {
@@ -50,38 +50,33 @@ app.use(async ({ request: { body } }) => {
             error ? [] : (result.list as HistoryPoint[])
           );
 
-        // get history of responsible changes and get last change specific fields
-        const {
-          value: { to },
-          createdDate,
-          field,
-        } = taskHistory
-          .filter(({ field }) =>
-            ["RESPONSIBLE_ID", "ACCOMPLICES"].includes(field)
-          )
-          .pop() as HistoryPoint;
-        const dateOfLastChange = parse(
-          createdDate + " +03",
-          "dd.MM.yyyy H:m:s x",
-          new Date(),
-        );
-        const tresholdDate = sub(new Date(), { seconds: 5 });
+        const lastAction = taskHistory.pop() as HistoryPoint;
+        if (["RESPONSIBLE_ID", "ACCOMPLICES"].includes(lastAction.field)) {
+          const {
+            value: { to },
+            createdDate,
+            field,
+          } = lastAction;
 
-        // check if responsible change happened within last 5 seconds,
-        if (
-          compareAsc(dateOfLastChange, tresholdDate) !== -1 &&
-          to !== CONFIG.WEBREQUEST_USER_ID
-        ) {
-          // send notification to chat
-          sendToChat(field, to);
-          // send notificaton by email
-          if (!user_optedout_from_email_notification(to)) {
-            const { name, email } = await getUser(to);
-            sendToEmail(
-              `Web-request was assigned to you (${name})`,
-              formMessageBody("changer", title),
-              { name, email },
-            );
+          const dateOfLastChange = parseISO(createdDate);
+          const tresholdDate = sub(new Date(), { seconds: 4 });
+
+          if (
+            // check if responsible change happened within last 5 seconds,
+            compareAsc(dateOfLastChange, tresholdDate) !== -1 &&
+            to !== CONFIG.WEBREQUEST_USER_ID
+          ) {
+            // send notification to chat
+            sendToChat(field, to);
+            // send notificaton by email
+            if (!user_optedout_from_email_notification(to)) {
+              const { name, email } = await getUser(to);
+              sendToEmail(
+                `Web-request was assigned to you (${name})`,
+                formMessageBody("changer", title),
+                { name, email },
+              );
+            }
           }
         }
       }
