@@ -50,8 +50,10 @@ app.use(async ({ request: { body } }) => {
             error ? [] : (result.list as HistoryPoint[])
           );
 
-        const lastAction = taskHistory.pop() as HistoryPoint;
-        if (["RESPONSIBLE_ID", "ACCOMPLICES"].includes(lastAction.field)) {
+        const lastAction = taskHistory.filter(({ field }) =>
+          ["RESPONSIBLE_ID", "ACCOMPLICES"].includes(field)
+        ).pop() as HistoryPoint;
+        if (lastAction) {
           const {
             value: { to },
             createdDate,
