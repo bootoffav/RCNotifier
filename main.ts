@@ -61,7 +61,7 @@ app.use(async ({ request: { body } }) => {
           } = lastAction;
 
           const dateOfLastChange = parseISO(createdDate);
-          const tresholdDate = sub(new Date(), { seconds: 1 });
+          const tresholdDate = sub(new Date(), { seconds: 2 });
 
           if (
             // check if responsible change happened within last 5 seconds,
