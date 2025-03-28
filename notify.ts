@@ -11,8 +11,6 @@ import {
 import { CONFIG } from "./main.ts";
 import { getTasks } from "./endpoint.ts";
 
-const kv = await Deno.openKv();
-
 function sendToChat(
   field: string,
   userId: string,
@@ -64,6 +62,7 @@ async function shouldNotify(
   createdDate: string,
   to: string,
   id: string,
+  kv: Deno.Kv,
 ): Promise<boolean> {
   const dateOfLastChange = parseISO(createdDate);
   const tresholdDate = sub(new Date(), { days: 3 });
@@ -106,12 +105,7 @@ Deno.cron(
 Deno.cron(
   "Clear kv for notified id",
   "0 0 * * 2-5",
-  async () => {
-    const keys = kv.list({ prefix: ["notifiedId"] });
-    for await (const entry of keys) {
-      await kv.delete(entry.key);
-    }
-  },
+  async () => void (await Deno.openKv()).set(["notifiedId"], []),
 );
 
 export { sendToChat, sendToEmail, shouldNotify };

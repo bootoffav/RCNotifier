@@ -18,7 +18,6 @@ const CONFIG = {
 };
 
 const kv = await Deno.openKv();
-
 kv.set(["notifiedId"], []);
 
 app.use(async ({ request: { body } }) => {
@@ -65,7 +64,7 @@ app.use(async ({ request: { body } }) => {
           } = lastAction;
 
           if (
-            await shouldNotify(createdDate, to, id)
+            await shouldNotify(createdDate, to, id, kv)
           ) {
             // send notification to chat
             sendToChat(field, to);
