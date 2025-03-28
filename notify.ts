@@ -47,7 +47,13 @@ function sendToEmail(
         email: "web_request@xmtextiles.com",
       },
       to: [{ name, email }],
-      cc: [{ email: "vit@xmtextiles.com", name: "Vitaly Aliev" }],
+      cc: [
+        { email: "vit@xmtextiles.com", name: "Vitaly Aliev" },
+        {
+          email: "admin@xmtextiles.com",
+          name: "Aleksei Butov",
+        },
+      ],
       subject,
       htmlContent,
     }),
