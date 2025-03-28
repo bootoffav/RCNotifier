@@ -1,7 +1,6 @@
 import { Application } from "@oak/oak";
-import { compareAsc, parseISO, sub } from "date-fns";
 import type { HistoryPoint, WebhookPayload } from "./types.ts";
-import { sendToChat, sendToEmail } from "./notify.ts";
+import { sendToChat, sendToEmail, shouldNotify } from "./notify.ts";
 import {
   formMessageBody,
   getUser,
@@ -17,6 +16,10 @@ const CONFIG = {
   CLIENT_ENDPOINT: Deno.env.get("CLIENT_ENDPOINT") || "",
   TASK_ID: "",
 };
+
+const kv = await Deno.openKv();
+
+kv.set(["notifiedId"], []);
 
 app.use(async ({ request: { body } }) => {
   try {
@@ -58,15 +61,11 @@ app.use(async ({ request: { body } }) => {
             value: { to },
             createdDate,
             field,
+            id,
           } = lastAction;
 
-          const dateOfLastChange = parseISO(createdDate);
-          const tresholdDate = sub(new Date(), { seconds: 3 });
-
           if (
-            // check if responsible change happened within last 5 seconds,
-            compareAsc(dateOfLastChange, tresholdDate) !== -1 &&
-            to !== CONFIG.WEBREQUEST_USER_ID
+            await shouldNotify(createdDate, to, id)
           ) {
             // send notification to chat
             sendToChat(field, to);
@@ -79,6 +78,10 @@ app.use(async ({ request: { body } }) => {
                 { name, email },
               );
             }
+            // save id to notified ids
+            let { value } = await kv.get(["notifiedId"]);
+            value = [...value as HistoryPoint["id"][], id];
+            kv.set(["notifiedId"], value);
           }
         }
       }

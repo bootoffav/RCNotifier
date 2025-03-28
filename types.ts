@@ -6,6 +6,7 @@ export interface Lead extends IncomingEntity {
 }
 
 export type HistoryPoint = {
+  id: string;
   field: string;
   createdDate: string;
   value: {

@@ -1,4 +1,5 @@
 import { groupBy } from "jsr:@es-toolkit/es-toolkit";
+import { compareAsc, parseISO, sub } from "date-fns";
 
 import type { Task } from "./types.ts";
 
@@ -9,6 +10,8 @@ import {
 } from "./utils.ts";
 import { CONFIG } from "./main.ts";
 import { getTasks } from "./endpoint.ts";
+
+const kv = await Deno.openKv();
 
 function sendToChat(
   field: string,
@@ -57,6 +60,21 @@ function sendToEmail(
   });
 }
 
+async function shouldNotify(
+  createdDate: string,
+  to: string,
+  id: string,
+): Promise<boolean> {
+  const dateOfLastChange = parseISO(createdDate);
+  const tresholdDate = sub(new Date(), { days: 3 });
+
+  const { value } = await kv.get(["notifiedId"]);
+
+  return compareAsc(dateOfLastChange, tresholdDate) !== -1 &&
+    to !== CONFIG.WEBREQUEST_USER_ID &&
+    !((value as string[]).includes(id));
+}
+
 Deno.cron(
   "Send daily email reminders",
   "30 13 * * 2-5",
@@ -85,4 +103,15 @@ Deno.cron(
   },
 );
 
-export { sendToChat, sendToEmail };
+Deno.cron(
+  "Clear kv for notified id",
+  "0 0 * * 2-5",
+  async () => {
+    const keys = kv.list({ prefix: ["notifiedId"] });
+    for await (const entry of keys) {
+      await kv.delete(entry.key);
+    }
+  },
+);
+
+export { sendToChat, sendToEmail, shouldNotify };
