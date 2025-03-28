@@ -65,7 +65,7 @@ async function shouldNotify(
   kv: Deno.Kv,
 ): Promise<boolean> {
   const dateOfLastChange = parseISO(createdDate);
-  const tresholdDate = sub(new Date(), { days: 3 });
+  const tresholdDate = sub(new Date(), { seconds: 5 });
 
   const { value } = await kv.get(["notifiedId"]);
 
