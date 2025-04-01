@@ -49,10 +49,6 @@ function sendToEmail(
       to: [{ name, email }],
       cc: [
         { email: "vit@xmtextiles.com", name: "Vitaly Aliev" },
-        {
-          email: "admin@xmtextiles.com",
-          name: "Aleksei Butov",
-        },
       ],
       subject,
       htmlContent,
