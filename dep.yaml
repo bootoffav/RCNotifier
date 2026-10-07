@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: rcnotifier
+  name: rcnotifier
+  namespace: utils
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rcnotifier
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: rcnotifier
+    spec:
+      containers:
+        - image: bootoffav/rcnotifier
+          name: rcnotifier
+          resources: {}
+          envFrom:
+            - secretRef:
+                name: rcnotifier

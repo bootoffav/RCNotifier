@@ -8,7 +8,10 @@
     "entrypoint": "main.ts"
   },
   "imports": {
-    "@oak/oak": "jsr:@oak/oak@^17.0.0",
-    "date-fns": "npm:date-fns"
+    "@es-toolkit/es-toolkit": "jsr:@es-toolkit/es-toolkit@^1.52.0",
+    "@oak/oak": "jsr:@oak/oak@^17.2.0",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "date-fns": "npm:date-fns@4.4.0",
+    "qs": "npm:qs@^6.16.0"
   }
 }

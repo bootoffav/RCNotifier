@@ -1,5 +1,5 @@
-import { stringify } from "npm:qs";
-import { format, previousSaturday } from "npm:date-fns";
+import { stringify } from "qs";
+import { format, previousSaturday } from "date-fns";
 
 const BITRIX24_ENDPOINT = Deno.env.get("CLIENT_ENDPOINT") || "";
 const WEBREQUEST_USER_ID = Deno.env.get("WEBREQUEST_USER_ID") || "";

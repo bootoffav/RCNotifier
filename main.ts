@@ -17,9 +17,6 @@ const CONFIG = {
   TASK_ID: "",
 };
 
-const kv = await Deno.openKv();
-kv.set(["notifiedId"], []);
-
 app.use(async ({ request: { body } }) => {
   try {
     if (body.type() === "form") {
@@ -63,9 +60,7 @@ app.use(async ({ request: { body } }) => {
             id,
           } = lastAction;
 
-          if (
-            await shouldNotify(createdDate, to, id, kv)
-          ) {
+          if (shouldNotify(createdDate, to, id)) {
             // send notification to chat
             sendToChat(field, to);
             // send notificaton by email
@@ -77,10 +72,6 @@ app.use(async ({ request: { body } }) => {
                 { name, email },
               );
             }
-            // save id to notified ids
-            let { value } = await kv.get(["notifiedId"]);
-            value = [...value as HistoryPoint["id"][], id];
-            kv.set(["notifiedId"], value);
           }
         }
       }

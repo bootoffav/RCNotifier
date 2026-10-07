@@ -1,7 +1,7 @@
-import { groupBy } from "jsr:@es-toolkit/es-toolkit";
+import { groupBy } from "@es-toolkit/es-toolkit";
 import { compareAsc, parseISO, sub } from "date-fns";
 
-import type { Task } from "./types.ts";
+import type { HistoryPoint, Task } from "./types.ts";
 
 import {
   formMessageBody,
@@ -60,20 +60,33 @@ function sendToEmail(
   });
 }
 
-async function shouldNotify(
+// ids of history points already notified about, with the time they were recorded
+const notifiedIds = new Map<HistoryPoint["id"], number>();
+const NOTIFIED_ID_TTL_MS = 60 * 60 * 1000;
+
+// Checks whether a change should be notified about and, if so, records its id
+// right away, so concurrent webhooks for the same change notify only once.
+function shouldNotify(
   createdDate: string,
   to: string,
-  id: string,
-  kv: Deno.Kv,
-): Promise<boolean> {
+  id: HistoryPoint["id"],
+): boolean {
+  const now = Date.now();
+  for (const [notifiedId, notifiedAt] of notifiedIds) {
+    if (now - notifiedAt > NOTIFIED_ID_TTL_MS) notifiedIds.delete(notifiedId);
+  }
+
   const dateOfLastChange = parseISO(createdDate);
   const tresholdDate = sub(new Date(), { seconds: 5 });
 
-  const { value } = await kv.get(["notifiedId"]);
+  if (
+    compareAsc(dateOfLastChange, tresholdDate) === -1 ||
+    to === CONFIG.WEBREQUEST_USER_ID ||
+    notifiedIds.has(id)
+  ) return false;
 
-  return compareAsc(dateOfLastChange, tresholdDate) !== -1 &&
-    to !== CONFIG.WEBREQUEST_USER_ID &&
-    !((value as string[]).includes(id));
+  notifiedIds.set(id, now);
+  return true;
 }
 
 Deno.cron(
@@ -102,12 +115,6 @@ Deno.cron(
       }
     }
   },
-);
-
-Deno.cron(
-  "Clear kv for notified id",
-  "0 0 * * 2-5",
-  async () => void (await Deno.openKv()).set(["notifiedId"], []),
 );
 
 export { sendToChat, sendToEmail, shouldNotify };
