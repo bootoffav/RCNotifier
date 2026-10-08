@@ -1,6 +1,11 @@
 import { Application } from "@oak/oak";
 import type { HistoryPoint, WebhookPayload } from "./types.ts";
-import { sendToChat, sendToEmail, shouldNotify } from "./notify.ts";
+import {
+  sendDailyReminders,
+  sendToChat,
+  sendToEmail,
+  shouldNotify,
+} from "./notify.ts";
 import {
   formMessageBody,
   getUser,
@@ -82,6 +87,7 @@ app.use(async ({ request: { body } }) => {
 });
 
 if (import.meta.main) {
+  Deno.cron("Send daily email reminders", "30 13 * * 2-5", sendDailyReminders);
   app.listen({ port: 80 });
 }
 

@@ -89,32 +89,28 @@ function shouldNotify(
   return true;
 }
 
-Deno.cron(
-  "Send daily email reminders",
-  "30 13 * * 2-5",
-  async () => {
-    // get tasks
-    const tasks: Task[] = await getTasks()
-      .then((r) => r.result.tasks)
-      .catch(() => []);
+async function sendDailyReminders() {
+  // get tasks
+  const tasks: Task[] = await getTasks()
+    .then((r) => r.result.tasks)
+    .catch(() => []);
 
-    const taskByResponsible = groupBy(
-      tasks,
-      (task: Task) => task.responsibleId,
-    );
+  const taskByResponsible = groupBy(
+    tasks,
+    (task: Task) => task.responsibleId,
+  );
 
-    // send mails
-    for (const [responsibleId, tasks] of Object.entries(taskByResponsible)) {
-      if (!user_optedout_from_email_notification(responsibleId)) {
-        const { name, email } = await getUser(responsibleId);
-        sendToEmail(
-          `this week web-requests (${name})`,
-          formMessageBody("reminder", tasks),
-          { name, email },
-        );
-      }
+  // send mails
+  for (const [responsibleId, tasks] of Object.entries(taskByResponsible)) {
+    if (!user_optedout_from_email_notification(responsibleId)) {
+      const { name, email } = await getUser(responsibleId);
+      sendToEmail(
+        `this week web-requests (${name})`,
+        formMessageBody("reminder", tasks),
+        { name, email },
+      );
     }
-  },
-);
+  }
+}
 
-export { sendToChat, sendToEmail, shouldNotify };
+export { sendDailyReminders, sendToChat, sendToEmail, shouldNotify };
